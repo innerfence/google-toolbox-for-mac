@@ -1236,24 +1236,6 @@ CannotBeginFetch:
 // logging (it's directory, etc.) could use it, but for now, that's punted.
 
 
-// We don't invoke Leopard methods on 10.4, because we check if the methods are
-// implemented before invoking it, but we need to be able to compile without
-// warnings.
-// This declaration means if you target <=10.4, this method will compile
-// without complaint in this source, so you must test with
-// -respondsToSelector:, too.
-#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
-@interface NSFileManager (LeopardMethodsOnTigerBuilds)
-- (BOOL)removeItemAtPath:(NSString *)path error:(NSError **)error;
-@end
-#endif
-// The iPhone Foundation removes the deprecated removeFileAtPath:handler:
-#if GTM_IPHONE_SDK
-@interface NSFileManager (TigerMethodsOniPhoneBuilds)
-- (BOOL)removeFileAtPath:(NSString *)path handler:(id)handler;
-@end
-#endif
-
 @implementation GTMHTTPFetcher (GTMHTTPFetcherLogging)
 
 // if GTM_HTTPFETCHER_ENABLE_LOGGING is defined by the user's project then
@@ -1858,15 +1840,7 @@ static NSString* gLoggingProcessName = nil;
                            processName];
   NSString *symlinkPath = [logDirectory stringByAppendingPathComponent:symlinkName];
   
-  // removeFileAtPath might be going away, but removeItemAtPath does not exist
-  // in 10.4
-  if ([fileManager respondsToSelector:@selector(removeFileAtPath:handler:)]) {
-    [fileManager removeFileAtPath:symlinkPath handler:nil];
-  } else if ([fileManager respondsToSelector:@selector(removeItemAtPath:error:)]) {
-    // To make the next line compile when targeting 10.4, we declare
-    // removeItemAtPath:error: in an @interface above
-    [fileManager removeItemAtPath:symlinkPath error:NULL];
-  }
+  [fileManager removeItemAtPath:symlinkPath error:NULL];
   
   [fileManager createSymbolicLinkAtPath:symlinkPath pathContent:htmlPath];
 }
