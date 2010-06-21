@@ -1633,23 +1633,25 @@ static NSString* gLoggingProcessName = nil;
   if (!didFileExist) {
     // write javascript functions.  The first one shows/hides the layer 
     // containing the iframe.
-    NSString *scriptFormat = @"<script type=\"text/javascript\"> "
-    "function toggleLayer(whichLayer){ var style2 = document.getElementById(whichLayer).style; "
-    "style2.display = style2.display ? \"\":\"block\";}</script>\n";
-    [outputHTML appendFormat:scriptFormat];
+#define GTM_HTTP_SCRIPT_FORMAT                                                                      \
+      @"<script type=\"text/javascript\"> "                                                         \
+       "function toggleLayer(whichLayer){ var style2 = document.getElementById(whichLayer).style; " \
+       "style2.display = style2.display ? \"\":\"block\";}</script>\n"
+    [outputHTML appendFormat:GTM_HTTP_SCRIPT_FORMAT];
     
     // the second function is passed the src file; if it's what's shown, it 
     // toggles the iframe's visibility. If some other src is shown, it shows 
     // the iframe and loads the new source.  Note we want to load the source 
     // whenever we show the iframe too since Firefox seems to format it wrong 
     // when showing it if we don't reload it.
-    NSString *toggleIFScriptFormat = @"<script type=\"text/javascript\"> "
-    "function toggleIFrame(whichLayer,iFrameID,newsrc)"
-    "{ \n var iFrameElem=document.getElementById(iFrameID); "
-    "if (iFrameElem.src.indexOf(newsrc) != -1) { toggleLayer(whichLayer); } "
-    "else { document.getElementById(whichLayer).style.display=\"block\"; } "
-    "iFrameElem.src=newsrc; }</script>\n</head>\n<body>\n";
-    [outputHTML appendFormat:toggleIFScriptFormat];
+#define GTM_HTTP_TOGGLE_IF_SCRIPT_FORMAT                                       \
+    @"<script type=\"text/javascript\"> "                                      \
+     "function toggleIFrame(whichLayer,iFrameID,newsrc)"                       \
+     "{ \n var iFrameElem=document.getElementById(iFrameID); "                 \
+     "if (iFrameElem.src.indexOf(newsrc) != -1) { toggleLayer(whichLayer); } " \
+     "else { document.getElementById(whichLayer).style.display=\"block\"; } "  \
+     "iFrameElem.src=newsrc; }</script>\n</head>\n<body>\n"
+    [outputHTML appendFormat:GTM_HTTP_TOGGLE_IF_SCRIPT_FORMAT];
   }
   
   // now write the visible html elements
