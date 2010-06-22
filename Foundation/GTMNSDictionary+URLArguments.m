@@ -20,6 +20,13 @@
 #import "GTMNSString+URLArguments.h"
 #import "GTMMethodCheck.h"
 
+// Add dummy class to work around requirement for -all_load
+@interface Dummy_NSDictionary_GTMNSDictionaryURLArgumentsAdditions : NSObject
+@end
+@implementation Dummy_NSDictionary_GTMNSDictionaryURLArgumentsAdditions
+- init { return nil; }
+@end
+
 @implementation NSDictionary (GTMNSDictionaryURLArgumentsAdditions)
 
 GTM_METHOD_CHECK(NSString, gtm_stringByEscapingForURLArgument);

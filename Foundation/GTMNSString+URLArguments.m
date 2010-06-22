@@ -19,6 +19,14 @@
 #import "GTMNSString+URLArguments.h"
 #import "GTMGarbageCollection.h"
 
+// Add dummy class to work around requirement for -all_load
+@interface Dummy_NSString_GTMNSStringURLArgumentsAdditions : NSObject
+@end
+@implementation Dummy_NSString_GTMNSStringURLArgumentsAdditions
+- init { return nil; }
+@end
+
+
 @implementation NSString (GTMNSStringURLArgumentsAdditions)
 
 - (NSString*)gtm_stringByEscapingForURLArgument {
