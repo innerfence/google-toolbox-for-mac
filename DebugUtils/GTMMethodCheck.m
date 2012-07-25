@@ -64,7 +64,7 @@ static BOOL ConformsToNSObjectProtocol(Class cls) {
   }
 #else
   // Iterate through all the protocols |cls| supports looking for NSObject.
-  if (cls == [Object class]
+  if (cls == [NSObject class]
       || class_conformsToProtocol(cls, @protocol(NSObject))) {
     return YES;
   }
