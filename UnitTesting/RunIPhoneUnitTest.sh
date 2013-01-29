@@ -108,15 +108,6 @@ GTMCreateLaunchDaemonPlist() {
 if [[ "$GTM_USE_TEST_AFTER_BUILD" == 1 && "$TEST_AFTER_BUILD" == "NO" ]]; then
   GTMXcodeNote ${LINENO} "Skipping running of unittests since TEST_AFTER_BUILD=NO."
 elif [ "$PLATFORM_NAME" == "iphonesimulator" ]; then
-  # Xcode 4.5 changed how simulator app can be run. The way this script has
-  # been working results in them now just logging a message and calling exit(0)
-  # from Apple code. Report the error that the tests aren't going to work.
-  if [[ "${XCODE_VERSION_MINOR}" -ge "0450" ]]; then
-    GTMXcodeError ${LINENO} \
-      "Unit testing process not supported on Xcode >= 4.5 (${XCODE_VERSION_MINOR}). Use RuniOSUnitTestsUnderSimulator.sh."
-    exit 1
-  fi
-
   # We kill the iPhone simulator because otherwise we run into issues where
   # the unittests fail becuase the simulator is currently running, and
   # at this time the iPhone SDK won't allow two simulators running at the same
