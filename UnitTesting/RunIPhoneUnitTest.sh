@@ -22,6 +22,9 @@ set -o nounset
 # Uncomment the next line to trace execution.
 #set -o verbose
 
+# Workaround to force usage of iphonesimulator5.1
+export SDKROOT=`perl -pe s/iPhoneSimulator[0-9]+[.][0-9]+/iPhoneSimulator5.1/ <<<"$SDKROOT"`
+
 #  Controlling environment variables:
 # GTM_DISABLE_ZOMBIES -
 #   Set to a non-zero value to turn on zombie checks. You will probably
