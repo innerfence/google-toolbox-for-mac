@@ -341,7 +341,15 @@
 #endif
 
 #ifndef GTM_NONNULL
-  #define GTM_NONNULL(x) __attribute__((nonnull(x)))
+  #if defined(__has_attribute)
+    #if __has_attribute(nonnull)
+      #define GTM_NONNULL(x) __attribute__((nonnull x))
+    #else
+      #define GTM_NONNULL(x)
+    #endif
+  #else
+    #define GTM_NONNULL(x)
+  #endif
 #endif
 
 // Invalidates the initializer from which it's called.

@@ -35,9 +35,15 @@ GTM_SIMULATOR_SDK_VERSION=${GTM_SIMULATOR_SDK_VERSION:=default}
 # GTM_SIMULATOR_START_TIMEOUT
 #   Controls the simulator startup timeout. Things like machine load, running
 #   on a VM, etc.; can cause the startup to take longer.
-GTM_SIMULATOR_START_TIMEOUT=${GTM_SIMULATOR_START_TIMEOUT:=60}
+GTM_SIMULATOR_START_TIMEOUT=${GTM_SIMULATOR_START_TIMEOUT:=120}
 
-# TODO(tvl): Add a variable for the simulator user dir.
+# GTM_SIMULATOR_USER_HOME -
+#   Root directory for simulator file system. Allows persistence across runs.
+GTM_SIMULATOR_USER_HOME=${GTM_SIMULATOR_USER_HOME:=default}
+
+# GTM_SIMULATOR_EXTRA_ENV -
+#   Space separated set env variables in format of "KEY1=value1 KEY2=value2"
+GTM_SIMULATOR_EXTRA_ENV=${GTM_SIMULATOR_EXTRA_ENV:=default}
 
 # GTM_ENABLE_LEAKS -
 #   Set to a non-zero value to turn on the leaks check. You will probably want
@@ -100,11 +106,15 @@ GTMFakeUnitTestingMsg() {
   echo "${DEVELOPER_DIR}/Tools/RunPlatformUnitTests.include:${1}: ${2}: ${3}"
 }
 
-GTMKillSimulator() {
+GTMKillNamedAndWait() {
   # If there is something killed, sleep for few seconds to let the simulator
   # spin down so it isn't still seen as running when the next thing tries to
   # launch it.
-  /usr/bin/killall "iPhone Simulator" 2> /dev/null && sleep 2 || true
+  /usr/bin/killall "${1}" 2> /dev/null && sleep 2 || true
+}
+
+GTMKillSimulator() {
+  GTMKillNamedAndWait "iPhone Simulator"
 }
 
 # Honor TEST_AFTER_BUILD if requested.
@@ -165,7 +175,7 @@ GTM_LEAKS_SYMBOLS_TO_IGNORE="CFHTTPCookieStore"
 #
 # Build up the command line to run.
 #
-
+GTM_TEST_APP_NAME=
 GTM_TEST_COMMAND=(
   "${SimExecutable}"
     "-d" "${GTM_DEVICE_TYPE}"
@@ -174,13 +184,26 @@ GTM_TEST_COMMAND=(
 if [[ "${GTM_SIMULATOR_SDK_VERSION}" != "default" ]] ; then
   GTM_TEST_COMMAND+=( "-s" "${GTM_SIMULATOR_SDK_VERSION}" )
 fi
+if [[ "${GTM_SIMULATOR_USER_HOME}" != "default" ]]; then
+  GTM_TEST_COMMAND+=( "-u" "${GTM_SIMULATOR_USER_HOME}" )
+fi
+if [[ "${GTM_SIMULATOR_EXTRA_ENV}" != "default" ]]; then
+  EXTRA_ENV_ARRAY=(${GTM_SIMULATOR_EXTRA_ENV})
+  for i in "${!EXTRA_ENV_ARRAY[@]}"
+  do
+    GTM_TEST_COMMAND+=( "-e" ${EXTRA_ENV_ARRAY[i]} )
+  done
+fi
 if [[ -n "${TEST_HOST}" ]]; then
   # When using a test host, it is usually set to the executable within the app
   # bundle, back up one to point at the bundle.
-  TEST_HOST_FILENAME=$(basename "${TEST_HOST}")
-  TEST_HOST_EXTENSION="${TEST_HOST_FILENAME##*.}"
+  GTM_TEST_APP_NAME=$(basename "${TEST_HOST}")
+  TEST_HOST_EXTENSION="${GTM_TEST_APP_NAME##*.}"
   if [[ "${TEST_HOST_EXTENSION}" != "app" ]] ; then
     TEST_HOST=$(dirname "${TEST_HOST}")
+  else
+    # Drop the extension.
+    GTM_TEST_APP_NAME="${GTM_TEST_APP_NAME%.*}"
   fi
   # Yes the DYLD_INSERT_LIBRARIES value below looks odd, that is found from
   # looking at what Xcode sets when it invokes unittests directly.
@@ -191,6 +214,13 @@ if [[ -n "${TEST_HOST}" ]]; then
     "${TEST_HOST}"
   )
 else
+  GTM_TEST_APP_NAME=$(basename "${TEST_BUNDLE_PATH}")
+  TEST_BUNDLE_EXTENSION="${GTM_TEST_APP_NAME##*.}"
+  if [[ "${TEST_BUNDLE_EXTENSION}" == "app" ]] ; then
+    # Drop the extension.
+    GTM_TEST_APP_NAME="${GTM_TEST_APP_NAME%.*}"
+  fi
+
   GTM_TEST_COMMAND+=( "${TEST_BUNDLE_PATH}" )
 fi
 GTM_TEST_COMMAND+=(
@@ -202,6 +232,10 @@ GTM_TEST_COMMAND+=(
 if [[ -n "${TEST_HOST}" ]]; then
   GTM_TEST_COMMAND+=( "${TEST_BUNDLE_PATH}" )
 fi
+
+# Kill the test host just to make sure it wasn't left running and will cause
+# problems.
+GTMKillNamedAndWait "${GTM_TEST_APP_NAME}"
 
 # These two lines seem to fake out Xcode just enough that its log parser acts
 # as though Xcode were running the unit test via the UI. This prevents false
@@ -216,6 +250,7 @@ TEST_HOST_RESULT=$?
 set -e
 
 GTMKillSimulator
+GTMKillNamedAndWait "${GTM_TEST_APP_NAME}"
 
 if [[ ${TEST_HOST_RESULT} -ne 0 ]]; then
   GTMXcodeError ${LINENO} "Tests failed."

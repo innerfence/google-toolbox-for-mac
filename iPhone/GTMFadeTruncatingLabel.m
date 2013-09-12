@@ -34,7 +34,7 @@
   self = [super initWithFrame:frame];
   if (self) {
     // Use clip as a default value.
-    self.lineBreakMode = UILineBreakModeClip;
+    self.lineBreakMode = NSLineBreakByClipping;
     [self setup];
   }
   return self;
@@ -83,13 +83,13 @@
                      fadeTail:(BOOL)fadeTail {
   // Create an opaque context.
   CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceGray();
-  CGContextRef context = CGBitmapContextCreate (NULL,
-                                                rect.size.width,
-                                                rect.size.height,
-                                                8,
-                                                4*rect.size.width,
-                                                colorSpace,
-                                                kCGImageAlphaNone);
+  CGContextRef context = CGBitmapContextCreate(NULL,
+                                               rect.size.width,
+                                               rect.size.height,
+                                               8,
+                                               4*rect.size.width,
+                                               colorSpace,
+                                               (CGBitmapInfo)kCGImageAlphaNone);
 
   // White background will mask opaque, black gradient will mask transparent.
   CGContextSetFillColorWithColor(context, [UIColor whiteColor].CGColor);
