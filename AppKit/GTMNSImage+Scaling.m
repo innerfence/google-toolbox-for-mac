@@ -70,10 +70,13 @@
 }
 
 - (BOOL)gtm_createIconRepresentations {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   [self setFlipped:NO];
   [self gtm_createRepresentationOfSize:NSMakeSize(16, 16)];  
   [self gtm_createRepresentationOfSize:NSMakeSize(32, 32)];
   [self setScalesWhenResized:NO];
+#pragma clang diagnostic pop
   return YES;
 }
 
@@ -174,7 +177,10 @@
 - (NSImage *)gtm_duplicateOfSize:(NSSize)size {
   NSImage *duplicate = [[self copy] autorelease];
   [duplicate gtm_shrinkToSize:size];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   [duplicate setFlipped:NO];
+#pragma clang diagnostic pop
   return duplicate;
 }
 
